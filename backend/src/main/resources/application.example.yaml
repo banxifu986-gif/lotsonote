@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: lotso-notes
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:change-me}
+    database: ${REDIS_DATABASE:0}
+    timeout: ${REDIS_TIMEOUT:2000}
+    lettuce:
+      pool:
+        enabled: true
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: 2000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:change-me}
+    virtual-host: ${RABBITMQ_VIRTUAL_HOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000
+          multiplier: 2
+          max-interval: 10000
+  mail:
+    host: ${MAIL_HOST:smtp.example.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:user@example.com}
+    password: ${MAIL_PASSWORD:change-me}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          socketFactory:
+            port: 465
+            class: jakarta.net.ssl.SSLSocketFactory
+    protocol: smtps
+    default-encoding: UTF-8
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.kama.notes.entity.custom
+  type-handlers-package: com.kama.notes.typehandler
+
+jwt:
+  secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
+  expiration: ${JWT_EXPIRATION:2592000}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+mail:
+  verify-code:
+    expire-minutes: ${MAIL_VERIFY_CODE_EXPIRE_MINUTES:15}
+    limit-expire-seconds: ${MAIL_VERIFY_CODE_LIMIT_EXPIRE_SECONDS:60}
+    max-error-count: ${MAIL_VERIFY_CODE_MAX_ERROR_COUNT:5}
+    error-expire-minutes: ${MAIL_VERIFY_CODE_ERROR_EXPIRE_MINUTES:5}
+    ip-limit-count: ${MAIL_VERIFY_CODE_IP_LIMIT_COUNT:20}
+    ip-limit-expire-minutes: ${MAIL_VERIFY_CODE_IP_LIMIT_EXPIRE_MINUTES:10}
+    email-ip-limit-count: ${MAIL_VERIFY_CODE_EMAIL_IP_LIMIT_COUNT:5}
+    email-ip-limit-expire-minutes: ${MAIL_VERIFY_CODE_EMAIL_IP_LIMIT_EXPIRE_MINUTES:10}
+    template-path: ${MAIL_VERIFY_CODE_TEMPLATE_PATH:templates/mail/verify-code.html}
