@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -196,5 +198,22 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.data[0].account").value("account01"))
                 .andExpect(jsonPath("$.data[0].email").value("admin@qq.com"))
                 .andExpect(jsonPath("$.data[0].password").doesNotExist());
+    }
+
+    @Test
+    public void uploadAvatarShouldReturnBadRequestWhenServiceRejectsInvalidFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "demo.png",
+                "image/png",
+                new byte[]{1, 2, 3}
+        );
+
+        when(userService.uploadAvatar(any())).thenThrow(new IllegalArgumentException("文件内容与图片格式不匹配"));
+
+        mockMvc.perform(multipart("/api/users/avatar").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("文件内容与图片格式不匹配"));
     }
 }

@@ -227,6 +227,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @NeedLogin
     public ApiResponse<AvatarVO> uploadAvatar(MultipartFile file) {
         String url = fileService.uploadImage(file);
         AvatarVO avatarVO = new AvatarVO();

@@ -47,6 +47,11 @@ public class ParamExceptionHandler {
         return ApiResponse.error(HttpStatus.CONFLICT.value(), "操作失败，数据已存在，请勿重复提交");
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ApiResponse<Void> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    }
+
     /** 系统异常：不可预期的错误，记录日志，返回友好提示，不暴露内部信息 */
     @ExceptionHandler(Exception.class)
     public ApiResponse<Void> handleException(Exception ex) {

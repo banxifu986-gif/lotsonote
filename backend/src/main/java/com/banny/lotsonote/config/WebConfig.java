@@ -15,7 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${upload.path:D:/coding/Java/project/kamanote/kamanotes/upload}")
+    @Value("${upload.path:D:/coding/Java/project/lotsonote/backend/upload}")
     private String uploadPath;
 
     @Autowired

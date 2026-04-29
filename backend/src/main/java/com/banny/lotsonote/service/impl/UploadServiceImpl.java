@@ -1,7 +1,8 @@
 package com.banny.lotsonote.service.impl;
 
+import com.banny.lotsonote.annotation.NeedLogin;
 import com.banny.lotsonote.model.base.ApiResponse;
-import com.banny.lotsonote.model.vo.upload.ImageVO;
+import com.banny.lotsonote.model.dto.upload.UploadImageData;
 import com.banny.lotsonote.service.FileService;
 import com.banny.lotsonote.service.UploadService;
 import com.banny.lotsonote.utils.ApiResponseUtil;
@@ -16,10 +17,11 @@ public class UploadServiceImpl implements UploadService {
     FileService fileService;
 
     @Override
-    public ApiResponse<ImageVO> uploadImage(MultipartFile file) {
+    @NeedLogin
+    public ApiResponse<UploadImageData> uploadImage(MultipartFile file) {
         String url = fileService.uploadImage(file);
-        ImageVO imageVO = new ImageVO();
-        imageVO.setUrl(url);
-        return ApiResponseUtil.success("上传成功", imageVO);
+        UploadImageData data = new UploadImageData();
+        data.setUrl(url);
+        return ApiResponseUtil.success("上传成功", data);
     }
 }

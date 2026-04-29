@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.banny.lotsonote.model.base.ApiResponse;
-import com.banny.lotsonote.model.vo.upload.ImageVO;
+import com.banny.lotsonote.model.dto.upload.UploadImageData;
 import com.banny.lotsonote.service.UploadService;
 
 /**
@@ -25,7 +25,7 @@ public class UploadController {
      * 上传图片
      */
     @PostMapping("/upload/image")
-    public ApiResponse<ImageVO> uploadImage(@RequestParam("file") MultipartFile file) {
+    public ApiResponse<UploadImageData> uploadImage(@RequestParam("file") MultipartFile file) {
         return uploadService.uploadImage(file);
     }
 }
