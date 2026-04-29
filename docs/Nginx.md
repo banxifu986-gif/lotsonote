@@ -127,7 +127,7 @@ sudo yum install nginx
 ### 2. 配置文件部署
 ```bash
 # 复制配置文件
-sudo cp nginx.conf /etc/nginx/conf.d/lotsonote.conf
+sudo cp backend/nginx/default.conf /etc/nginx/conf.d/lotsonote.conf
 
 # 测试配置
 sudo nginx -t
