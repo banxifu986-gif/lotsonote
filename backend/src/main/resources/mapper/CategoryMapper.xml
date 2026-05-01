@@ -86,5 +86,13 @@
         SELECT *
         FROM category
         WHERE name = #{categoryName}
+          AND parent_category_id = 0
+    </select>
+
+    <select id="findByNameAndParentCategoryId" resultType="com.banny.lotsonote.model.entity.Category">
+        SELECT *
+        FROM category
+        WHERE name = #{categoryName}
+          AND parent_category_id = #{parentCategoryId}
     </select>
 </mapper>

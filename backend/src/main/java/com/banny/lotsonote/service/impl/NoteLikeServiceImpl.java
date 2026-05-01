@@ -44,25 +44,24 @@ public class NoteLikeServiceImpl implements NoteLikeService {
             return ApiResponseUtil.error("笔记不存在");
         }
 
-        // 创建点赞记录
         NoteLike noteLike = new NoteLike();
         noteLike.setNoteId(noteId);
         noteLike.setUserId(userId);
         noteLike.setCreatedAt(new Date());
-        noteLikeMapper.insert(noteLike);
+        int inserted = noteLikeMapper.insert(noteLike);
+        if (inserted == 0) {
+            return ApiResponseUtil.success("已点赞");
+        }
 
-        // 增加笔记点赞数
         noteMapper.likeNote(noteId);
 
         MessageDTO messageDTO = new MessageDTO();
         messageDTO.setType(MessageType.LIKE);
         messageDTO.setReceiverId(note.getAuthorId());
         messageDTO.setSenderId(userId);
-
         messageDTO.setTargetType(MessageTargetType.NOTE);
         messageDTO.setTargetId(noteId);
         messageDTO.setIsRead(false);
-
         messageService.createMessage(messageDTO);
 
         return ApiResponseUtil.success("点赞成功");
@@ -81,11 +80,13 @@ public class NoteLikeServiceImpl implements NoteLikeService {
         }
 
         try {
-            // 删除点赞记录
             NoteLike noteLike = noteLikeMapper.findByUserIdAndNoteId(userId, noteId);
-            if (noteLike != null) {
-                noteLikeMapper.delete(noteLike);
-                // 减少笔记点赞数
+            if (noteLike == null) {
+                return ApiResponseUtil.success("已取消点赞");
+            }
+
+            int deleted = noteLikeMapper.delete(noteLike);
+            if (deleted > 0) {
                 noteMapper.unlikeNote(noteId);
             }
             return ApiResponseUtil.success("取消点赞成功");

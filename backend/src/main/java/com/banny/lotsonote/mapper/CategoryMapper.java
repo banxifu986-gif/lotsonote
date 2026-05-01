@@ -89,4 +89,14 @@ public interface CategoryMapper {
      * @return 返回查询到的分类对象，如果未找到则返回 null
      */
     Category findByName(String categoryName);
+
+    /**
+     * 根据分类名称和父分类ID查询分类
+     *
+     * @param categoryName 分类名称
+     * @param parentCategoryId 父分类ID
+     * @return 返回查询到的分类对象，如果未找到则返回 null
+     */
+    Category findByNameAndParentCategoryId(@Param("categoryName") String categoryName,
+                                           @Param("parentCategoryId") Integer parentCategoryId);
 }

@@ -101,6 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public ApiResponse<CreateCategoryVO> createCategory(CreateCategoryBody categoryBody) {
+        String categoryName = categoryBody.getName().trim();
 
         if (categoryBody.getParentCategoryId() != 0) {
             Category parent = categoryMapper.findById(categoryBody.getParentCategoryId());
@@ -109,8 +110,18 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
 
+        Category existingCategory = categoryBody.getParentCategoryId() == 0
+                ? categoryMapper.findByName(categoryName)
+                : categoryMapper.findByNameAndParentCategoryId(categoryName, categoryBody.getParentCategoryId());
+        if (existingCategory != null) {
+            CreateCategoryVO createCategoryVO = new CreateCategoryVO();
+            createCategoryVO.setCategoryId(existingCategory.getCategoryId());
+            return ApiResponseUtil.success("分类已存在", createCategoryVO);
+        }
+
         Category category = new Category();
         BeanUtils.copyProperties(categoryBody, category);
+        category.setName(categoryName);
 
         // 插入分类
         try {
@@ -150,12 +161,13 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public Category findOrCreateCategory(String categoryName) {
-        Category category = categoryMapper.findByName(categoryName.trim());
+        String normalizedCategoryName = categoryName.trim();
+        Category category = categoryMapper.findByName(normalizedCategoryName);
         if (category != null) return category;
 
         try {
             Category category2 = new Category();
-            category2.setName(categoryName.trim());
+            category2.setName(normalizedCategoryName);
             category2.setParentCategoryId(0);
             categoryMapper.insert(category2);
             return category2;
@@ -166,11 +178,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category findOrCreateCategory(String categoryName, Integer parentCategoryId) {
-        Category category = categoryMapper.findByName(categoryName.trim());
+        String normalizedCategoryName = categoryName.trim();
+        Category category = categoryMapper.findByNameAndParentCategoryId(normalizedCategoryName, parentCategoryId);
         if (category != null) return category;
         try {
             Category category2 = new Category();
-            category2.setName(categoryName.trim());
+            category2.setName(normalizedCategoryName);
             category2.setParentCategoryId(parentCategoryId);
             categoryMapper.insert(category2);
             return category2;

@@ -25,6 +25,15 @@ public interface QuestionListMapper {
     QuestionList findById(@Param("questionListId") Integer questionListId);
 
     /**
+     * 根据题单名称和类型查找题单
+     *
+     * @param name 题单名称
+     * @param type 题单类型
+     * @return 返回找到的题单对象，如果没有找到则返回 null
+     */
+    QuestionList findByNameAndType(@Param("name") String name, @Param("type") Integer type);
+
+    /**
      * 获取所有题单
      *
      * @return 返回所有题单的列表

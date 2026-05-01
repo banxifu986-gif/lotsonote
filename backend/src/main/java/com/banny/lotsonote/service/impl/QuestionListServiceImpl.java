@@ -37,9 +37,17 @@ public class QuestionListServiceImpl implements QuestionListService {
 
     @Override
     public ApiResponse<CreateQuestionListVO> createQuestionList(CreateQuestionListBody body) {
+        String questionListName = body.getName() == null ? null : body.getName().trim();
+        QuestionList existingQuestionList = questionListMapper.findByNameAndType(questionListName, body.getType());
+        if (existingQuestionList != null) {
+            CreateQuestionListVO questionListVO = new CreateQuestionListVO();
+            questionListVO.setQuestionListId(existingQuestionList.getQuestionListId());
+            return ApiResponseUtil.success("题单已存在", questionListVO);
+        }
 
         QuestionList questionList = new QuestionList();
         BeanUtils.copyProperties(body, questionList);
+        questionList.setName(questionListName);
 
         // 创建题单
         try {

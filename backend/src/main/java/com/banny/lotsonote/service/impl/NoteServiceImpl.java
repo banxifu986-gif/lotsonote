@@ -166,6 +166,13 @@ public class NoteServiceImpl implements NoteService {
             return ApiResponseUtil.error("questionId 对应的问题不存在");
         }
 
+        Note existingNote = noteMapper.findByAuthorIdAndQuestionId(userId, questionId);
+        if (existingNote != null) {
+            CreateNoteVO createNoteVO = new CreateNoteVO();
+            createNoteVO.setNoteId(existingNote.getNoteId());
+            return ApiResponseUtil.success("笔记已存在", createNoteVO);
+        }
+
         Note note = new Note();
         BeanUtils.copyProperties(request, note);
         note.setAuthorId(userId);

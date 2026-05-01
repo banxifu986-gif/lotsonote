@@ -23,7 +23,7 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO note_like (user_id, note_id)
+        INSERT IGNORE INTO note_like (user_id, note_id)
         VALUES (#{userId}, #{noteId})
     </insert>
 

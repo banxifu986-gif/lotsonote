@@ -18,7 +18,7 @@ public interface CommentLikeMapper {
      *
      * @param commentLike 评论点赞实体
      */
-    void insert(CommentLike commentLike);
+    int insert(CommentLike commentLike);
 
     /**
      * 删除评论点赞
@@ -26,7 +26,7 @@ public interface CommentLikeMapper {
      * @param commentId 评论ID
      * @param userId 用户ID
      */
-    void delete(@Param("commentId") Integer commentId, @Param("userId") Long userId);
+    int delete(@Param("commentId") Integer commentId, @Param("userId") Long userId);
 
     /**
      * 查询用户点赞的评论ID列表

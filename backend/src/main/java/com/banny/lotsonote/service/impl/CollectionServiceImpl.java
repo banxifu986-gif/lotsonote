@@ -141,30 +141,21 @@ public class CollectionServiceImpl implements CollectionService {
             }
 
             if ("create".equals(action)) {
-                try {
-                    // 获取用户是否收藏过该笔记
-                    if (collectionMapper.countByCreatorIdAndNoteId(userId, noteId) == 0) {
-                        // 笔记不存在，给笔记增加收藏量
-                        noteMapper.collectNote(noteId);
-                    }
-                    CollectionNote collectionNote = new CollectionNote();
-                    collectionNote.setCollectionId(collectionId);
-                    collectionNote.setNoteId(noteId);
-                    collectionNoteMapper.insert(collectionNote);
-                } catch (Exception e) {
-                    return ApiResponseUtil.error("收藏失败");
+                int collectedCountBefore = collectionMapper.countByCreatorIdAndNoteId(userId, noteId);
+                CollectionNote collectionNote = new CollectionNote();
+                collectionNote.setCollectionId(collectionId);
+                collectionNote.setNoteId(noteId);
+                int inserted = collectionNoteMapper.insert(collectionNote);
+                if (inserted > 0 && collectedCountBefore == 0) {
+                    noteMapper.collectNote(noteId);
                 }
             }
 
             if ("delete".equals(action)) {
-                try {
-                    collectionNoteMapper.deleteByCollectionIdAndNoteId(collectionId, noteId);
-                    if (collectionMapper.countByCreatorIdAndNoteId(userId, noteId) == 0) {
-                        // 笔记不存在，给笔记减少收藏量
-                        noteMapper.unCollectNote(noteId);
-                    }
-                } catch (Exception e) {
-                    return ApiResponseUtil.error("取消收藏失败");
+                int collectedCountBefore = collectionMapper.countByCreatorIdAndNoteId(userId, noteId);
+                int deleted = collectionNoteMapper.deleteByCollectionIdAndNoteId(collectionId, noteId);
+                if (deleted > 0 && collectedCountBefore == 1) {
+                    noteMapper.unCollectNote(noteId);
                 }
             }
         }

@@ -126,8 +126,19 @@ public class QuestionListItemServiceImpl implements QuestionListItemService {
             int rank = questionListItemMapper.nextRank(body.getQuestionListId());
             questionListItem.setRank(rank);
 
-            questionListItemMapper.insert(questionListItem);
+            int inserted = questionListItemMapper.insert(questionListItem);
             CreateQuestionListItemVO createQuestionListItemVO = new CreateQuestionListItemVO();
+            if (inserted == 0) {
+                QuestionListItem existingItem = questionListItemMapper.findByQuestionListIdAndQuestionId(
+                        body.getQuestionListId(),
+                        body.getQuestionId()
+                );
+                if (existingItem == null) {
+                    return ApiResponseUtil.error("创建题单项失败");
+                }
+                createQuestionListItemVO.setRank(existingItem.getRank());
+                return ApiResponseUtil.success("题单项已存在", createQuestionListItemVO);
+            }
             createQuestionListItemVO.setRank(questionListItem.getRank());
             return ApiResponseUtil.success("创建题单项成功", createQuestionListItemVO);
         } catch (Exception e) {

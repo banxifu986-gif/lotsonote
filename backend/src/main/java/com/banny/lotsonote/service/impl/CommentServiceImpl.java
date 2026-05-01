@@ -275,8 +275,6 @@ public class CommentServiceImpl implements CommentService {
     public ApiResponse<EmptyVO> likeComment(Integer commentId) {
         Long userId = requestScopeData.getUserId();
 
-        System.out.println(userId + " liked " + commentId);
-
         // 查询评论
         Comment comment = commentMapper.findById(commentId);
 
@@ -285,17 +283,17 @@ public class CommentServiceImpl implements CommentService {
         }
 
         try {
-            // 增加评论点赞数
-            commentMapper.incrementLikeCount(commentId);
             CommentLike commentLike = new CommentLike();
-
             commentLike.setCommentId(commentId);
             commentLike.setUserId(userId);
+            int inserted = commentLikeMapper.insert(commentLike);
+            if (inserted == 0) {
+                return ApiResponse.success(new EmptyVO());
+            }
 
-            commentLikeMapper.insert(commentLike);
+            commentMapper.incrementLikeCount(commentId);
 
             MessageDTO messageDTO = new MessageDTO();
-
             messageDTO.setType(MessageType.LIKE);
             messageDTO.setReceiverId(comment.getAuthorId());
             messageDTO.setSenderId(userId);
@@ -324,9 +322,10 @@ public class CommentServiceImpl implements CommentService {
         }
 
         try {
-            // 减少评论点赞数
-            commentMapper.decrementLikeCount(commentId);
-            commentLikeMapper.delete(commentId, userId);
+            int deleted = commentLikeMapper.delete(commentId, userId);
+            if (deleted > 0) {
+                commentMapper.decrementLikeCount(commentId);
+            }
             return ApiResponse.success(new EmptyVO());
         } catch (Exception e) {
             log.error("取消点赞评论失败", e);

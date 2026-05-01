@@ -18,6 +18,16 @@ public interface QuestionListItemMapper {
     int insert(QuestionListItem questionListItem);
 
     /**
+     * 根据题单ID和题目ID查找题单项
+     *
+     * @param questionListId 题单ID
+     * @param questionId 题目ID
+     * @return 题单项，不存在则返回 null
+     */
+    QuestionListItem findByQuestionListIdAndQuestionId(@Param("questionListId") Integer questionListId,
+                                                       @Param("questionId") Integer questionId);
+
+    /**
      * 根据题单ID查找题单项
      *
      * @param questionListId 题单的唯一标识符

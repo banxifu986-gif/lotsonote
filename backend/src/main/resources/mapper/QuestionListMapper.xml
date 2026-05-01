@@ -31,6 +31,13 @@
         SELECT * FROM question_list WHERE question_list_id = #{questionListId}
     </select>
 
+    <select id="findByNameAndType" resultType="com.banny.lotsonote.model.entity.QuestionList">
+        SELECT *
+        FROM question_list
+        WHERE name = #{name}
+          AND type = #{type}
+    </select>
+
     <select id="findAll" resultType="com.banny.lotsonote.model.entity.QuestionList">
         SELECT * FROM question_list
     </select>

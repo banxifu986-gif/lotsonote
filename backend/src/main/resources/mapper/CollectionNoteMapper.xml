@@ -36,7 +36,7 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO collection_note (collection_id, note_id)
+        INSERT IGNORE INTO collection_note (collection_id, note_id)
         VALUES (#{collectionId}, #{noteId})
     </insert>
 

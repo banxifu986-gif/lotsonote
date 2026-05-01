@@ -2,9 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.banny.lotsonote.mapper.QuestionListItemMapper">
     <insert id="insert">
-        INSERT INTO question_list_item (question_list_id, question_id, `rank`)
+        INSERT IGNORE INTO question_list_item (question_list_id, question_id, `rank`)
         VALUES (#{questionListId}, #{questionId}, #{rank})
     </insert>
+
+    <select id="findByQuestionListIdAndQuestionId" resultType="com.banny.lotsonote.model.entity.QuestionListItem">
+        SELECT *
+        FROM question_list_item
+        WHERE question_list_id = #{questionListId}
+          AND question_id = #{questionId}
+    </select>
 
     <resultMap id="QuestionListItemVOResultMap" type="com.banny.lotsonote.model.vo.questionListItem.QuestionListItemVO">
         <id property="questionListId" column="question_list_id"/>

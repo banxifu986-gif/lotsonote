@@ -108,8 +108,17 @@ public class QuestionServiceImpl implements QuestionService {
             return ApiResponseUtil.error("分类 Id 非法");
         }
 
+        String title = createQuestionBody.getTitle().trim();
+        Question existingQuestion = questionMapper.findByTitle(title);
+        if (existingQuestion != null) {
+            CreateQuestionVO createQuestionVO = new CreateQuestionVO();
+            createQuestionVO.setQuestionId(existingQuestion.getQuestionId());
+            return ApiResponseUtil.success("问题已存在", createQuestionVO);
+        }
+
         Question question = new Question();
         BeanUtils.copyProperties(createQuestionBody, question);
+        question.setTitle(title);
 
         try {
             questionMapper.insert(question);
