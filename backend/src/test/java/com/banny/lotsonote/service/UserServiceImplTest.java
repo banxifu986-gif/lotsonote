@@ -1,5 +1,6 @@
 package com.banny.lotsonote.service;
 
+import com.banny.lotsonote.aspect.NeedAdminAspect;
 import com.banny.lotsonote.exception.BusinessException;
 import com.banny.lotsonote.mapper.UserMapper;
 import com.banny.lotsonote.model.base.ApiResponse;
@@ -13,8 +14,10 @@ import com.banny.lotsonote.model.vo.user.AdminUserVO;
 import com.banny.lotsonote.model.vo.user.LoginUserVO;
 import com.banny.lotsonote.model.vo.user.RegisterVO;
 import com.banny.lotsonote.model.vo.user.UserVO;
+import com.banny.lotsonote.scope.RequestScopeData;
 import com.banny.lotsonote.service.impl.UserServiceImpl;
 import com.banny.lotsonote.utils.JwtUtil;
+import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +31,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -218,5 +222,88 @@ public class UserServiceImplTest {
         assertEquals("account01", response.getData().get(0).getAccount());
         assertEquals("admin@qq.com", response.getData().get(0).getEmail());
         assertEquals(1, response.getData().get(0).getIsAdmin());
+    }
+
+    @Test
+    public void getUserListShouldReturnUnauthenticatedErrorWhenNotLoggedIn() {
+        RequestScopeData requestScopeData = new RequestScopeData();
+        requestScopeData.setLogin(false);
+        UserService userServiceProxy = createAdminProxy(requestScopeData);
+
+        UserQueryParam queryParam = new UserQueryParam();
+        queryParam.setPage(1);
+        queryParam.setPageSize(10);
+
+        ApiResponse<List<AdminUserVO>> response = userServiceProxy.getUserList(queryParam);
+
+        assertEquals(400, response.getCode());
+        assertEquals("用户未登录", response.getMessage());
+        verify(userMapper, never()).countByQueryParam(any());
+    }
+
+    @Test
+    public void getUserListShouldThrowForbiddenWhenUserIsNotAdmin() {
+        RequestScopeData requestScopeData = new RequestScopeData();
+        requestScopeData.setLogin(true);
+        requestScopeData.setUserId(100L);
+        User normalUser = new User();
+        normalUser.setUserId(100L);
+        normalUser.setIsAdmin(0);
+        when(userMapper.findById(100L)).thenReturn(normalUser);
+        UserService userServiceProxy = createAdminProxy(requestScopeData);
+
+        UserQueryParam queryParam = new UserQueryParam();
+        queryParam.setPage(1);
+        queryParam.setPageSize(10);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> userServiceProxy.getUserList(queryParam));
+
+        assertEquals(403, exception.getCode());
+        assertEquals("无管理员权限", exception.getMessage());
+        verify(userMapper, never()).countByQueryParam(any());
+    }
+
+    @Test
+    public void getUserListShouldSucceedWhenUserIsAdmin() {
+        RequestScopeData requestScopeData = new RequestScopeData();
+        requestScopeData.setLogin(true);
+        requestScopeData.setUserId(100L);
+        User adminUser = new User();
+        adminUser.setUserId(100L);
+        adminUser.setIsAdmin(1);
+        when(userMapper.findById(100L)).thenReturn(adminUser);
+
+        UserQueryParam queryParam = new UserQueryParam();
+        queryParam.setPage(1);
+        queryParam.setPageSize(10);
+
+        User listedUser = new User();
+        listedUser.setUserId(101L);
+        listedUser.setAccount("account01");
+        listedUser.setEmail("admin@qq.com");
+        listedUser.setIsAdmin(1);
+
+        when(userMapper.countByQueryParam(queryParam)).thenReturn(1);
+        when(userMapper.findByQueryParam(queryParam, 10, 0)).thenReturn(List.of(listedUser));
+
+        UserService userServiceProxy = createAdminProxy(requestScopeData);
+        ApiResponse<List<AdminUserVO>> response = userServiceProxy.getUserList(queryParam);
+
+        assertEquals(200, response.getCode());
+        assertNotNull(response.getData());
+        assertEquals(1, response.getData().size());
+        assertEquals("account01", response.getData().get(0).getAccount());
+    }
+
+    private UserService createAdminProxy(RequestScopeData requestScopeData) {
+        ReflectionTestUtils.setField(userService, "requestScopeData", requestScopeData);
+
+        NeedAdminAspect aspect = new NeedAdminAspect();
+        ReflectionTestUtils.setField(aspect, "requestScopeData", requestScopeData);
+        ReflectionTestUtils.setField(aspect, "userMapper", userMapper);
+
+        AspectJProxyFactory factory = new AspectJProxyFactory(userService);
+        factory.addAspect(aspect);
+        return factory.getProxy();
     }
 }

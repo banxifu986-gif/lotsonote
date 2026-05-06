@@ -1,5 +1,6 @@
 package com.banny.lotsonote.service.impl;
 
+import com.banny.lotsonote.annotation.NeedAdmin;
 import com.banny.lotsonote.mapper.QuestionListItemMapper;
 import com.banny.lotsonote.mapper.QuestionListMapper;
 import com.banny.lotsonote.model.base.ApiResponse;
@@ -26,16 +27,19 @@ public class QuestionListServiceImpl implements QuestionListService {
     private QuestionListItemMapper questionListItemMapper;
 
     @Override
+    @NeedAdmin
     public ApiResponse<QuestionList> getQuestionList(Integer questionListId) {
         return ApiResponseUtil.success("获取题单成功", questionListMapper.findById(questionListId));
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<List<QuestionList>> getQuestionLists() {
         return ApiResponseUtil.success("获取题单成功", questionListMapper.findAll());
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<CreateQuestionListVO> createQuestionList(CreateQuestionListBody body) {
         String questionListName = body.getName() == null ? null : body.getName().trim();
         QuestionList existingQuestionList = questionListMapper.findByNameAndType(questionListName, body.getType());
@@ -61,6 +65,7 @@ public class QuestionListServiceImpl implements QuestionListService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> deleteQuestionList(Integer questionListId) {
         // 删除题单，还需要删除题单对应的题单项目
         QuestionList questionList = questionListMapper.findById(questionListId);
@@ -80,6 +85,7 @@ public class QuestionListServiceImpl implements QuestionListService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> updateQuestionList(Integer questionListId, UpdateQuestionListBody body) {
 
         QuestionList questionList = new QuestionList();

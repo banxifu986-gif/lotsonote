@@ -1,5 +1,6 @@
 package com.banny.lotsonote.service.impl;
 
+import com.banny.lotsonote.annotation.NeedAdmin;
 import com.banny.lotsonote.mapper.CategoryMapper;
 import com.banny.lotsonote.mapper.QuestionMapper;
 import com.banny.lotsonote.model.base.ApiResponse;
@@ -67,6 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @NeedAdmin
     @Transactional
     public ApiResponse<EmptyVO> deleteCategory(Integer categoryId) throws RuntimeException {
         // 找出分类 Id = categoryId
@@ -100,6 +102,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<CreateCategoryVO> createCategory(CreateCategoryBody categoryBody) {
         String categoryName = categoryBody.getName().trim();
 
@@ -135,6 +138,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> updateCategory(Integer categoryId, UpdateCategoryBody categoryBody) {
 
         Category category = categoryMapper.findById(categoryId);

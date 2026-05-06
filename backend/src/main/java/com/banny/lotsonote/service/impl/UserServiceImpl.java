@@ -1,5 +1,6 @@
 package com.banny.lotsonote.service.impl;
 
+import com.banny.lotsonote.annotation.NeedAdmin;
 import com.banny.lotsonote.annotation.NeedLogin;
 import com.banny.lotsonote.exception.BusinessException;
 import com.banny.lotsonote.model.base.ApiResponse;
@@ -213,6 +214,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<List<AdminUserVO>> getUserList(UserQueryParam userQueryParam) {
         int total = userMapper.countByQueryParam(userQueryParam);
         int offset = PaginationUtils.calculateOffset(userQueryParam.getPage(), userQueryParam.getPageSize());

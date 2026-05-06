@@ -1,5 +1,6 @@
 package com.banny.lotsonote.service.impl;
 
+import com.banny.lotsonote.annotation.NeedAdmin;
 import com.banny.lotsonote.mapper.CategoryMapper;
 import com.banny.lotsonote.mapper.NoteMapper;
 import com.banny.lotsonote.mapper.QuestionMapper;
@@ -82,6 +83,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<List<QuestionVO>> getQuestions(QuestionQueryParam queryParams) {
 
         int offset = PaginationUtils.calculateOffset(queryParams.getPage(), queryParams.getPageSize());
@@ -100,6 +102,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<CreateQuestionVO> createQuestion(CreateQuestionBody createQuestionBody) {
 
         // 校验分类 Id 是否合法
@@ -134,6 +137,7 @@ public class QuestionServiceImpl implements QuestionService {
      * 批量创建问题
      */
     @Override
+    @NeedAdmin
     @Transactional(rollbackFor = Exception.class)
     public ApiResponse<EmptyVO> createQuestionBatch(CreateQuestionBatchBody createQuestionBatchBody) {
         // 获取 markdown 文本
@@ -250,6 +254,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> updateQuestion(Integer questionId, UpdateQuestionBody updateQuestionBody) {
         Question question = new Question();
         BeanUtils.copyProperties(updateQuestionBody, question);
@@ -264,6 +269,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> deleteQuestion(Integer questionId) {
         if (questionMapper.deleteById(questionId) > 0) {
             return ApiResponseUtil.success("删除问题成功");

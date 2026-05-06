@@ -1,5 +1,6 @@
 package com.banny.lotsonote.service.impl;
 
+import com.banny.lotsonote.annotation.NeedAdmin;
 import com.banny.lotsonote.mapper.NoteMapper;
 import com.banny.lotsonote.mapper.QuestionListItemMapper;
 import com.banny.lotsonote.mapper.QuestionListMapper;
@@ -108,6 +109,7 @@ public class QuestionListItemServiceImpl implements QuestionListItemService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<List<QuestionListItemVO>> getQuestionListItems(Integer questionListId) {
 
         List<QuestionListItemVO> byQuestionListId = questionListItemMapper.findByQuestionListId(questionListId);
@@ -116,6 +118,7 @@ public class QuestionListItemServiceImpl implements QuestionListItemService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<CreateQuestionListItemVO> createQuestionListItem(CreateQuestionListItemBody body) {
 
         QuestionListItem questionListItem = new QuestionListItem();
@@ -147,6 +150,7 @@ public class QuestionListItemServiceImpl implements QuestionListItemService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> deleteQuestionListItem(Integer questionListId, Integer questionId) {
         try {
             questionListItemMapper.deleteByQuestionListIdAndQuestionId(questionListId, questionId);
@@ -157,6 +161,7 @@ public class QuestionListItemServiceImpl implements QuestionListItemService {
     }
 
     @Override
+    @NeedAdmin
     public ApiResponse<EmptyVO> sortQuestionListItem(SortQuestionListItemBody body) {
         // TODO: 待优化
         List<Integer> questionIds = body.getQuestionIds();
