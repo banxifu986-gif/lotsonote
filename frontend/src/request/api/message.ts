@@ -1,11 +1,17 @@
 import { http } from '../http'
 import { ApiResponse } from '../types'
-import { MessageQueryParams, Message } from '@/domain/message/types'
+import { Message } from '@/domain/message/types'
+
+export interface MessageQueryParams {
+  page?: number
+  pageSize?: number
+  isRead?: boolean
+}
 
 /**
  * 获取消息列表
  */
-export const getMessages = (params: MessageQueryParams) => {
+export const getMessages = (params?: MessageQueryParams) => {
   return http.get<ApiResponse<Message[]>>('/api/messages', { params })
 }
 

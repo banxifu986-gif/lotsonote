@@ -6,6 +6,7 @@ import { zhCN } from 'date-fns/locale'
 import CommentInput from './CommentInput.tsx'
 import { Comment } from '@/domain/comment/types.ts'
 import { useComment } from '@/domain/comment/hooks/useComment.ts'
+import { resolveAvatarUrl } from '@/domain/user/utils/avatar.ts'
 import './CommentList.css'
 
 interface CommentListProps {
@@ -13,7 +14,10 @@ interface CommentListProps {
   onCommentCountChange?: () => void
 }
 
-const CommentList: React.FC<CommentListProps> = ({ noteId }) => {
+const CommentList: React.FC<CommentListProps> = ({
+  noteId,
+  onCommentCountChange,
+}) => {
   /**
    * 查询评论参数
    */
@@ -75,7 +79,7 @@ const CommentList: React.FC<CommentListProps> = ({ noteId }) => {
         <div className="flex items-start gap-3">
           <Avatar
             size="small"
-            src={reply.author?.avatarUrl}
+            src={resolveAvatarUrl(reply.author?.avatarUrl || '')}
             className="comment-avatar mt-1 flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
@@ -143,7 +147,7 @@ const CommentList: React.FC<CommentListProps> = ({ noteId }) => {
         {/* 主评论 */}
         <div className="flex items-start gap-3">
           <Avatar
-            src={comment.author?.avatarUrl}
+            src={resolveAvatarUrl(comment.author?.avatarUrl || '')}
             className="comment-avatar flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
@@ -225,6 +229,7 @@ const CommentList: React.FC<CommentListProps> = ({ noteId }) => {
           onComment={async (noteId, parentId, content) => {
             await createComment({ noteId, parentId, content })
             setReplyTo(null)
+            onCommentCountChange?.()
           }}
           onCancel={() => setReplyTo(null)}
         />

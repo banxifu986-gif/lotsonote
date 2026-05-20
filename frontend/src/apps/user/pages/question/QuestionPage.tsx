@@ -1,66 +1,57 @@
-import React, { Suspense, useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import { EyeOutlined } from '@ant-design/icons'
+import { Upload } from '@icon-park/react'
+import { Button, Drawer, Space, Tag, message, Modal, Spin } from 'antd'
 import { useParams } from 'react-router-dom'
-import { QuestionView, useQuestion } from '../../../../domain/question'
 import {
   MarkdownEditor,
   MarkdownRender,
   Panel,
 } from '../../../../base/components'
-import { Button, message, Modal, Spin } from 'antd'
-import { Upload } from '@icon-park/react'
-import { EyeOutlined } from '@ant-design/icons'
-import { NoteList, NoteQueryParams, useNotes } from '../../../../domain/note'
 import { useApp } from '../../../../base/hooks'
+import AiAssistantPanel from '../../../../domain/ai/components/AiAssistantPanel.tsx'
+import { aiService } from '../../../../domain/ai/service/aiService.ts'
+import type { AiChatMessage } from '../../../../domain/ai/types.ts'
+import { NoteList, NoteQueryParams, useNotes } from '../../../../domain/note'
+import { QuestionView, useQuestion } from '../../../../domain/question'
 
 const QuestionPage: React.FC = () => {
-  /**
-   * 地址栏参数
-   */
   const { questionId } = useParams()
+  const questionIdNumber = Number(questionId)
+  const { question, userFinishedQuestion, updateUserNoteContent } =
+    useQuestion(questionIdNumber)
 
-  /**
-   * 获取问题携带用户相关笔记的问题详情
-   */
-  const { question, userFinishedQuestion } = useQuestion(Number(questionId))
-
-  /**
-   * 笔记内容
-   */
   const [value, setValue] = useState(question?.userNote.content ?? '')
-  const setValueHandle = (value: string) => {
-    setValue(value)
-  }
+  const [isEditorVisible, setIsEditorVisible] = useState(false)
+  const [isShowPreview, setIsShowPreview] = useState(false)
+  const [createBtnLoading, setCreateBtnLoading] = useState(false)
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false)
+  const [aiSessionId, setAiSessionId] = useState<string>()
+  const [aiMessages, setAiMessages] = useState<AiChatMessage[]>([])
+  const [aiSending, setAiSending] = useState(false)
+  const [aiLoadingMessages, setAiLoadingMessages] = useState(false)
 
   useEffect(() => {
-    if (question?.userNote) {
-      if (question?.userNote.finished) {
-        setValueHandle(question?.userNote.content)
-      }
+    if (question?.userNote?.finished) {
+      setValue(question.userNote.content)
     }
   }, [question])
 
-  /**
-   * 控制编辑器显示隐藏功能
-   */
-  const [isEditorVisible, setIsEditorVisible] = useState(false)
-  const toggleEditorVisible = () => {
-    setIsEditorVisible(!isEditorVisible)
-  }
+  useEffect(() => {
+    setAiSessionId(undefined)
+    setAiMessages([])
+  }, [question?.userNote?.content])
 
-  /**
-   * 写笔记 / 编辑笔记按钮点击事件
-   */
-  function writeOrEditButtonHandle() {
-    toggleEditorVisible()
-  }
+  useEffect(() => {
+    setAiSessionId(undefined)
+    setAiMessages([])
+    setAiDrawerOpen(false)
+  }, [questionIdNumber])
 
-  /**
-   * 获取和问题相关的笔记列表
-   */
   const [noteQueryParams, setNoteQueryParams] = useState<NoteQueryParams>({
     page: 1,
     pageSize: 10,
-    questionId: Number(questionId),
+    questionId: questionIdNumber,
   })
 
   const {
@@ -72,16 +63,12 @@ const QuestionPage: React.FC = () => {
     setNoteCollectStatusHandle,
   } = useNotes(noteQueryParams)
 
-  /**
-   * 提交笔记处理事件
-   */
-  const [createBtnLoading, setCreateBtnLoading] = useState(false)
-
-  /**
-   * 用户信息
-   * app 信息
-   */
   const app = useApp()
+
+  const aiQuickPrompts = useMemo(
+    () => ['请讲解这道题', '请给我一些思路提示', '请帮我梳理这道题的考点'],
+    [],
+  )
 
   const createOrUpdateNoteClickHandle = async () => {
     if (!app.isLogin) {
@@ -90,57 +77,168 @@ const QuestionPage: React.FC = () => {
     }
 
     setCreateBtnLoading(true)
-
     try {
-      if (!question?.userNote.finished) {
-        const noteId = await createNoteHandle(Number(questionId), value)
-        toggleEditorVisible()
-        // 校验一下 noteId
+      if (!question?.userNote?.finished) {
+        const noteId = await createNoteHandle(questionIdNumber, value)
+        setIsEditorVisible(false)
         if (noteId) {
           userFinishedQuestion(noteId, value)
+          setAiSessionId(undefined)
+          setAiMessages([])
         }
         message.success('笔记已提交')
       } else {
-        // 修改笔记操作
-        if (!question?.userNote) return
-        await updateNoteHandle(question?.userNote.noteId, {
+        if (!question?.userNote) {
+          return
+        }
+        await updateNoteHandle(question.userNote.noteId, {
           content: value,
-          questionId: Number(questionId),
+          questionId: questionIdNumber,
         })
+        updateUserNoteContent(value)
+        setAiSessionId(undefined)
+        setAiMessages([])
         message.success('笔记已修改')
-        toggleEditorVisible()
+        setIsEditorVisible(false)
       }
-    } catch (e: any) {
-      console.log(e.message)
-      message.error(e.message)
+    } catch (error: any) {
+      message.error(error.message)
     } finally {
       setCreateBtnLoading(false)
     }
   }
 
-  const [isShowPreview, setIsShowPreview] = useState(false)
+  const loadAiMessages = async (sessionId: string) => {
+    setAiLoadingMessages(true)
+    try {
+      const response = await aiService.getChatMessages(sessionId)
+      setAiSessionId(sessionId)
+      setAiMessages(response.data.messages)
+    } finally {
+      setAiLoadingMessages(false)
+    }
+  }
+
+  const ensureQuestionAiSession = async () => {
+    if (!question) {
+      throw new Error('题目详情尚未加载完成')
+    }
+
+    if (aiSessionId) {
+      return aiSessionId
+    }
+
+    const response = await aiService.createChatSession({
+      sceneType: 'QUESTION_TUTOR',
+      bizType: 'QUESTION',
+      bizId: String(question.questionId),
+      title: `${question.title} - AI讲解`,
+      forceRecreate: true,
+      contextSnapshot: {
+        title: question.title,
+        questionContent: question.title,
+        description: `难度：${question.difficulty ?? '未知'}`,
+        referenceSolution: question.referenceSolution ?? undefined,
+        examPoint: question.examPoint,
+        noteContent: question.userNote?.finished
+          ? question.userNote.content
+          : undefined,
+      },
+    })
+    const nextSessionId = response.data.chatSessionId
+    await loadAiMessages(nextSessionId)
+    return nextSessionId
+  }
+
+  const openAiHandle = async () => {
+    if (!app.isLogin) {
+      message.info('请先登录')
+      return
+    }
+    setAiDrawerOpen(true)
+    try {
+      await ensureQuestionAiSession()
+    } catch (error: any) {
+      message.error(error.message ?? '打开 AI 讲解失败')
+    }
+  }
+
+  const handleAiSend = async (content: string) => {
+    setAiSending(true)
+    try {
+      const sessionId = await ensureQuestionAiSession()
+      await aiService.createChatMessage({
+        sessionId,
+        content,
+      })
+      await loadAiMessages(sessionId)
+    } catch (error: any) {
+      message.error(error.message ?? 'AI 请求失败，请稍后重试')
+    } finally {
+      setAiSending(false)
+    }
+  }
 
   return (
     <>
       <QuestionView
         question={question}
-        writeOrEditButtonHandle={writeOrEditButtonHandle}
+        writeOrEditButtonHandle={() => setIsEditorVisible((prev) => !prev)}
+        openAiHandle={() => void openAiHandle()}
       />
-      {/* 编辑器 */}
-      {isEditorVisible && (
+      <Drawer
+        title="题目 AI 辅导"
+        width={560}
+        open={aiDrawerOpen}
+        onClose={() => setAiDrawerOpen(false)}
+        destroyOnClose={false}
+      >
+        <div className="mb-3">
+          <div className="mb-2 text-sm text-gray-500">
+            当前回答会优先参考平台解析与用户笔记，不判定对错。
+          </div>
+          <Space wrap>
+            <Tag color="blue">题目讲解</Tag>
+            <Tag color="gold">思路提示</Tag>
+            <Tag color="purple">考点梳理</Tag>
+            <Tag color="green">继续追问</Tag>
+          </Space>
+        </div>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {aiQuickPrompts.map((prompt) => (
+            <Button
+              key={prompt}
+              size="small"
+              onClick={() => void handleAiSend(prompt)}
+            >
+              {prompt}
+            </Button>
+          ))}
+        </div>
+        <AiAssistantPanel
+          title={question ? `${question.title} · AI讲解` : '题目 AI 辅导'}
+          messages={aiMessages}
+          loading={aiLoadingMessages}
+          sending={aiSending}
+          onSend={handleAiSend}
+          emptyDescription="从当前题目发起讲解或追问，AI 会复用这道题的上下文"
+          placeholder="继续追问这道题的思路、考点或你的卡点"
+        />
+      </Drawer>
+      {isEditorVisible ? (
         <div className="mb-4 flex w-full justify-center">
           <div className="w-[900px]">
             <div className="h-[calc(100vh-var(--header-height)-65px)]">
               <Suspense
                 fallback={
-                  <Spin tip="加载编辑器中" className="mt-12">
+                  <Spin tip="编辑器加载中" className="mt-12">
                     {''}
                   </Spin>
                 }
               >
                 <MarkdownEditor
                   value={value}
-                  setValue={setValueHandle}
+                  setValue={setValue}
                 ></MarkdownEditor>
               </Suspense>
             </div>
@@ -157,13 +255,12 @@ const QuestionPage: React.FC = () => {
                 loading={createBtnLoading}
                 onClick={createOrUpdateNoteClickHandle}
               >
-                {question?.userNote.finished ? '修改笔记' : '提交笔记'}
+                {question?.userNote?.finished ? '修改笔记' : '提交笔记'}
               </Button>
             </div>
           </div>
         </div>
-      )}
-      {/* 预览框 */}
+      ) : null}
       <Modal
         open={isShowPreview}
         onCancel={() => setIsShowPreview(false)}
@@ -172,6 +269,18 @@ const QuestionPage: React.FC = () => {
       >
         <MarkdownRender markdown={value} />
       </Modal>
+      {question?.referenceSolution ? (
+        <div className="mb-4 flex w-full justify-center">
+          <div className="w-[900px]">
+            <Panel>
+              <div className="mb-3 text-lg font-semibold text-neutral-800">
+                题目参考解析
+              </div>
+              <MarkdownRender markdown={question.referenceSolution} />
+            </Panel>
+          </div>
+        </div>
+      ) : null}
       <div className="flex w-full justify-center">
         <div className="w-[700px]">
           <Panel>

@@ -5,6 +5,7 @@ import { ApiList } from '../../../request'
  */
 export const adminQuestionApiList: ApiList = {
   getQuestionList: ['GET', '/api/admin/questions'],
+  getQuestionById: ['GET', '/api/admin/questions/{questionId}'],
   createQuestion: ['POST', '/api/admin/questions'],
   createQuestionBatch: ['POST', '/api/admin/questions/batch'],
   updateQuestion: ['PATCH', '/api/admin/questions/{questionId}'],

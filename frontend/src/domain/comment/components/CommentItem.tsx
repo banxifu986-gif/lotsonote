@@ -4,6 +4,7 @@ import { LikeOutlined, LikeFilled } from '@ant-design/icons'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { Comment } from '@/domain/comment/types.ts'
+import { resolveAvatarUrl } from '@/domain/user/utils/avatar.ts'
 
 interface CommentItemProps {
   comment: Comment
@@ -36,7 +37,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
       ]}
     >
       <List.Item.Meta
-        avatar={<Avatar src={comment.author?.avatarUrl} />}
+        avatar={
+          <Avatar src={resolveAvatarUrl(comment.author?.avatarUrl || '')} />
+        }
         title={comment.author?.username}
         description={
           <div>

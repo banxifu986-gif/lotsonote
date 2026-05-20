@@ -11,6 +11,7 @@ import com.banny.lotsonote.model.dto.question.*;
 import com.banny.lotsonote.model.entity.Category;
 import com.banny.lotsonote.model.entity.Note;
 import com.banny.lotsonote.model.entity.Question;
+import com.banny.lotsonote.model.entity.QuestionSolution;
 import com.banny.lotsonote.model.vo.question.CreateQuestionVO;
 import com.banny.lotsonote.model.vo.question.QuestionNoteVO;
 import com.banny.lotsonote.model.vo.question.QuestionUserVO;
@@ -18,6 +19,7 @@ import com.banny.lotsonote.model.vo.question.QuestionVO;
 import com.banny.lotsonote.scope.RequestScopeData;
 import com.banny.lotsonote.service.CategoryService;
 import com.banny.lotsonote.service.QuestionService;
+import com.banny.lotsonote.service.QuestionSolutionService;
 import com.banny.lotsonote.utils.ApiResponseUtil;
 import com.banny.lotsonote.utils.MarkdownAST;
 import com.banny.lotsonote.utils.PaginationUtils;
@@ -55,6 +57,9 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private QuestionSolutionService questionSolutionService;
 
     // -------------------------------
     // 正则：匹配形如：
@@ -103,6 +108,21 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @NeedAdmin
+    public ApiResponse<QuestionVO> getQuestion(Integer questionId) {
+        Question question = questionMapper.findById(questionId);
+        if (question == null) {
+            return ApiResponseUtil.error("questionId 非法");
+        }
+
+        QuestionVO questionVO = new QuestionVO();
+        BeanUtils.copyProperties(question, questionVO);
+        QuestionSolution questionSolution = questionSolutionService.findByQuestionId(questionId);
+        questionVO.setReferenceSolution(questionSolution == null ? null : questionSolution.getContent());
+        return ApiResponseUtil.success("获取问题成功", questionVO);
+    }
+
+    @Override
+    @NeedAdmin
     public ApiResponse<CreateQuestionVO> createQuestion(CreateQuestionBody createQuestionBody) {
 
         // 校验分类 Id 是否合法
@@ -125,6 +145,7 @@ public class QuestionServiceImpl implements QuestionService {
 
         try {
             questionMapper.insert(question);
+            questionSolutionService.saveOrUpdate(question.getQuestionId(), createQuestionBody.getReferenceSolution());
             CreateQuestionVO createQuestionVO = new CreateQuestionVO();
             createQuestionVO.setQuestionId(question.getQuestionId());
             return ApiResponseUtil.success("创建问题成功", createQuestionVO);
@@ -256,12 +277,22 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @NeedAdmin
     public ApiResponse<EmptyVO> updateQuestion(Integer questionId, UpdateQuestionBody updateQuestionBody) {
+        if (updateQuestionBody.getCategoryId() != null) {
+            Category category = categoryMapper.findById(updateQuestionBody.getCategoryId());
+            if (category == null) {
+                return ApiResponseUtil.error("分类 Id 非法");
+            }
+        }
+
         Question question = new Question();
         BeanUtils.copyProperties(updateQuestionBody, question);
         question.setQuestionId(questionId);
         // 更新问题
         try {
-            questionMapper.update(question);
+            if (hasQuestionBaseChanges(updateQuestionBody)) {
+                questionMapper.update(question);
+            }
+            questionSolutionService.saveOrUpdate(questionId, updateQuestionBody.getReferenceSolution());
             return ApiResponseUtil.success("更新问题成功");
         } catch (Exception e) {
             return ApiResponseUtil.error("更新问题失败");
@@ -271,6 +302,7 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @NeedAdmin
     public ApiResponse<EmptyVO> deleteQuestion(Integer questionId) {
+        questionSolutionService.deleteByQuestionId(questionId);
         if (questionMapper.deleteById(questionId) > 0) {
             return ApiResponseUtil.success("删除问题成功");
         } else {
@@ -345,12 +377,21 @@ public class QuestionServiceImpl implements QuestionService {
 
         BeanUtils.copyProperties(question, questionNoteVO);
         questionNoteVO.setUserNote(userNote);
+        QuestionSolution questionSolution = questionSolutionService.findByQuestionId(questionId);
+        questionNoteVO.setReferenceSolution(questionSolution == null ? null : questionSolution.getContent());
 
         // 增加问题的点击量
         // TODO: 有待优化
         questionMapper.incrementViewCount(questionId);
 
         return ApiResponseUtil.success("获取问题成功", questionNoteVO);
+    }
+
+    private boolean hasQuestionBaseChanges(UpdateQuestionBody updateQuestionBody) {
+        return updateQuestionBody.getTitle() != null
+                || updateQuestionBody.getCategoryId() != null
+                || updateQuestionBody.getDifficulty() != null
+                || updateQuestionBody.getExamPoint() != null;
     }
 
     @Override

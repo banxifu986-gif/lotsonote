@@ -30,6 +30,7 @@ export interface QuestionEntity {
 
   /** 浏览量 */
   viewCount: number
+  referenceSolution?: string | undefined
 
   /** 记录创建时间 */
   createdAt: string // ISO datetime format
@@ -65,7 +66,7 @@ export type QuestionWithUserStatus = Omit<
  */
 export type QuestionWithUserNote = Omit<
   QuestionEntity,
-  'questionId' | 'createdAt' | 'updatedAt' | 'categoryId'
+  'createdAt' | 'updatedAt'
 > & {
   userNote: UserNote
 }

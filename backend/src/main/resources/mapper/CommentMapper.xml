@@ -60,7 +60,6 @@
         SELECT * FROM comment
         <where>
             <if test="params.noteId != null">AND note_id = #{params.noteId}</if>
-            <if test="params.authorId != null">AND author_id = #{params.authorId}</if>
             AND (parent_id IS NULL OR parent_id = 0)
         </where>
         ORDER BY created_at ASC
@@ -82,7 +81,6 @@
         SELECT COUNT(*) FROM comment
         <where>
             <if test="params.noteId != null">AND note_id = #{params.noteId}</if>
-            <if test="params.authorId != null">AND author_id = #{params.authorId}</if>
             AND (parent_id IS NULL OR parent_id = 0)
         </where>
     </select>

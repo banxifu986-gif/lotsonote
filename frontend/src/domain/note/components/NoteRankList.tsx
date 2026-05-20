@@ -6,6 +6,7 @@ import { NoteRankListItem } from '../types/serviceTypes.ts'
 import { BronzeTrophy, GoldTrophy, SliverTrophy } from '../../../base/icon'
 import { noteService } from '../service/noteService.ts'
 import { USER_HOME } from '@/apps/user/router/config.ts'
+import { resolveAvatarUrl } from '../../user/utils/avatar.ts'
 
 const NoteRankList: React.FC = () => {
   const [rankList, setRankList] = useState<NoteRankListItem[]>([])
@@ -68,7 +69,7 @@ const NoteRankList: React.FC = () => {
           <div className="col-span-2">{rankMap(item.rank)}</div>
           <div className="col-span-7 flex items-center gap-1 overflow-x-hidden text-sm font-medium text-neutral-600">
             <Avatar
-              src={item.avatarUrl}
+              src={resolveAvatarUrl(item.avatarUrl || '')}
               size={26}
               className={
                 'flex-shrink-0 cursor-pointer ' +

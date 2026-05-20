@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { Panel } from '../../../../base/components'
 import {
   AppstoreOutlined,
   ProfileOutlined,
@@ -7,6 +6,7 @@ import {
 } from '@ant-design/icons'
 import { Menu, MenuProps } from 'antd'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Panel } from '../../../../base/components'
 import {
   USER_CENTER,
   USER_COLLECT,
@@ -34,18 +34,16 @@ const UserCenterPage: React.FC = () => {
       icon: <SettingOutlined />,
     },
   ]
-  /**
-   * 监听路由变化，设置菜单选中状态
-   */
+
   const location = useLocation()
   const [selectedKeys, setSelectedKeys] = useState([USER_INFO])
 
   useEffect(() => {
     if (location.pathname === USER_CENTER) {
       setSelectedKeys([USER_INFO])
-    } else {
-      setSelectedKeys([location.pathname])
+      return
     }
+    setSelectedKeys([location.pathname])
   }, [location.pathname])
 
   return (

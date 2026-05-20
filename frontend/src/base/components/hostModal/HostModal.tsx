@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { FloatButton, Input, Modal } from 'antd'
 import { kamanoteHost } from '../../constants'
 import { Wifi } from '@icon-park/react'
+import { getApiBaseUrl, setApiBaseUrl } from '../../utils/apiBaseUrl.ts'
 
 const HostModal: React.FC = () => {
   const [host, setHost] = useState('')
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    setHost(localStorage.getItem(kamanoteHost) || '')
+    setHost(localStorage.getItem(kamanoteHost) || getApiBaseUrl())
   }, [])
 
   return (
@@ -37,7 +38,7 @@ const HostModal: React.FC = () => {
             value={host}
             onChange={(e) => {
               setHost(e.target.value)
-              localStorage.setItem(kamanoteHost, e.target.value)
+              setApiBaseUrl(e.target.value)
             }}
           />
         </div>

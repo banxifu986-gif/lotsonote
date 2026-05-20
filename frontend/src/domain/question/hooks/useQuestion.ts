@@ -44,9 +44,25 @@ export function useQuestion(questionId: number) {
     })
   }
 
+  function updateUserNoteContent(content: string) {
+    setQuestion((question) => {
+      if (!question) return undefined
+
+      return {
+        ...question,
+        userNote: {
+          ...question.userNote,
+          content,
+          finished: true,
+        },
+      }
+    })
+  }
+
   return {
     loading,
     question,
     userFinishedQuestion,
+    updateUserNoteContent,
   }
 }

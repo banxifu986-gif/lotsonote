@@ -3,6 +3,7 @@ import { Avatar, Popover } from 'antd'
 import ProfileMenu from './ProfileMenu.tsx'
 import { useUser } from '../hooks/useUser.ts'
 import { UserOutlined } from '@ant-design/icons'
+import { resolveAvatarUrl } from '../utils/avatar.ts'
 
 const UserAvatarMenu: React.FC = () => {
   const user = useUser()
@@ -19,7 +20,7 @@ const UserAvatarMenu: React.FC = () => {
       >
         <Avatar
           size={36}
-          src={user?.avatarUrl}
+          src={resolveAvatarUrl(user?.avatarUrl || '')}
           icon={<UserOutlined />}
           className="cursor-pointer"
         >

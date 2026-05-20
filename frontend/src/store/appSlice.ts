@@ -1,15 +1,17 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 type AppState = {
-  isLogin: boolean // 记录登录状态
-  isLoaded: boolean // 记录加载状态
-  isAdminApp: boolean // 记录当前是否在管理端下
+  isLogin: boolean
+  isLoaded: boolean
+  isAdminApp: boolean
+  loginModalOpen: boolean
 }
 
 const initialAppState: AppState = {
   isLogin: false,
   isLoaded: false,
   isAdminApp: false,
+  loginModalOpen: false,
 }
 
 const appSlice = createSlice({
@@ -21,6 +23,9 @@ const appSlice = createSlice({
     },
     logout: (state) => {
       state.isLogin = false
+    },
+    setLoginModalOpen: (state, action: PayloadAction<boolean>) => {
+      state.loginModalOpen = action.payload
     },
     loaded: (state) => {
       state.isLoaded = true
@@ -37,6 +42,7 @@ const appSlice = createSlice({
 export const {
   login,
   logout,
+  setLoginModalOpen,
   loaded,
   intoAdminApp,
   outAdminApp,

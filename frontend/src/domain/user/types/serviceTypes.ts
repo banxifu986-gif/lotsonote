@@ -19,7 +19,8 @@ export type RegisterData = {
 export type LoginBody = {
   account?: string
   email?: string
-  password: string
+  password?: string
+  verifyCode?: string
 }
 
 /**
@@ -27,7 +28,7 @@ export type LoginBody = {
  */
 export type SendVerifyCodeBody = {
   email: string
-  type: 'REGISTER' | 'RESET_PASSWORD'
+  type: 'REGISTER' | 'RESET_PASSWORD' | 'LOGIN'
 }
 
 /**

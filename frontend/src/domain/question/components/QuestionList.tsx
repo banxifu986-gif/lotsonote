@@ -18,6 +18,7 @@ import { AddThree, DeleteOne, EditTwo } from '@icon-park/react'
 import QuestionAddDrawer from './QuestionAddDrawer.tsx'
 import TextArea from 'antd/es/input/TextArea'
 import { createQuestionBatchPlaceHolder } from '@/domain/questionList/placeholder.ts'
+import { adminQuestionService } from '../service/questionService.ts'
 
 /**
  * 管理端的问题列表
@@ -188,8 +189,12 @@ const QuestionList: React.FC = () => {
                 size="18"
                 fill={['#333', '#8dbaf1', '#ffffff', '#e64155']}
                 className="cursor-pointer"
-                onClick={() => {
-                  setSelectedQuestion(question)
+                onClick={async () => {
+                  const { data } =
+                    await adminQuestionService.getQuestionByIdService(
+                      question.questionId,
+                    )
+                  setSelectedQuestion(data)
                   setMode('update')
                   setIsDrawerOpen(true)
                 }}

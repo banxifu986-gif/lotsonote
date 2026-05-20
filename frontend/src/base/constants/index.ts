@@ -9,6 +9,7 @@ export const kamanoteUserToken = 'kamanote:userToken'
  * 存储请求的 host
  */
 export const kamanoteHost = 'kamanote:host'
+export const legacyKamanoteHost = 'kamanote_host'
 
 /**
  * 存储主题信息

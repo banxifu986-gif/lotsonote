@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { Menu, Badge } from 'antd'
+import { BellOutlined } from '@ant-design/icons'
+import { Badge, Menu, MenuProps } from 'antd'
 import { NavLink, useLocation } from 'react-router-dom'
-import { MenuProps } from 'antd'
+import { ColumnDivider } from '../../../../base/components'
+import { useApp } from '@/base/hooks'
+import { messageService } from '../../../../domain/message/service/messageService.ts'
+import DownloadNoteItem from '../../../../domain/note/components/DownloadNoteItem.tsx'
+import { LoginModal, UserAvatarMenu } from '../../../../domain/user'
 import {
+  AI_CHAT,
   HOME_PAGE,
   MESSAGE_CENTER,
   QUESTION_LIST,
   QUESTION_SET,
 } from '../../router/config.ts'
 import Logo from '../logo/Logo.tsx'
-import { useApp } from '@/base/hooks'
-import { LoginModal, UserAvatarMenu } from '../../../../domain/user'
 import SearchInput from '../searchInput/SearchInput.tsx'
-import { ColumnDivider } from '../../../../base/components'
-import DownloadNoteItem from '../../../../domain/note/components/DownloadNoteItem.tsx'
-import { BellOutlined } from '@ant-design/icons'
-import { messageService } from '../../../../domain/message/service/messageService.ts'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -32,44 +32,32 @@ const items: MenuItem[] = [
     label: <NavLink to={QUESTION_LIST}>题单</NavLink>,
     key: 'question-list',
   },
+  {
+    label: <NavLink to={AI_CHAT}>AI 助手</NavLink>,
+    key: 'ai',
+  },
 ]
 
 const NavBar: React.FC = () => {
-  /**
-   * 监听路由变化，设置选中菜单项
-   */
   const [selectedMenuItem, setSelectedMenuItem] = useState<string[]>()
-  const location = useLocation()
-
-  /**
-   * 未读消息数量状态
-   */
   const [unreadCount, setUnreadCount] = useState<number>(0)
-
-  /**
-   * 获取 app 信息
-   */
+  const location = useLocation()
   const app = useApp()
 
   useEffect(() => {
     if (location.pathname === '/') {
       setSelectedMenuItem(['home'])
-    } else {
-      setSelectedMenuItem([location.pathname.split('/')[1]])
+      return
     }
+    setSelectedMenuItem([location.pathname.split('/')[1]])
   }, [location.pathname])
 
-  /**
-   * 定时获取未读消息数量
-   */
   useEffect(() => {
-    // 如果用户未登录，不获取消息数量
     if (!app.isLogin) {
       setUnreadCount(0)
       return
     }
 
-    // 立即获取一次未读消息数量
     const fetchUnreadCount = async () => {
       try {
         const response = await messageService.getUnreadCount()
@@ -79,12 +67,9 @@ const NavBar: React.FC = () => {
       }
     }
 
-    fetchUnreadCount()
-
-    // 设置5秒定时器
+    void fetchUnreadCount()
     const interval = setInterval(fetchUnreadCount, 5000)
 
-    // 清理定时器
     return () => {
       clearInterval(interval)
     }

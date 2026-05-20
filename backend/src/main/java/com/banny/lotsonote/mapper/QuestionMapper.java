@@ -86,7 +86,7 @@ public interface QuestionMapper {
      *
      * @param questionId 需要删除的问题的ID
      */
-    int deleteById(Integer questionId);
+    int deleteById(@Param("questionId") Integer questionId);
 
     /**
      * 根据分类ID删除相关记录

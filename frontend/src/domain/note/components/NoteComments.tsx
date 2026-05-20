@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Avatar, Button, Input, List, message } from 'antd'
 import {
   createComment,
@@ -18,21 +18,19 @@ export function NoteComments({ noteId }: NoteCommentsProps) {
   const [comments, setComments] = useState<NoteComment[]>([])
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
-  const { currentUser } = useUser()
+  const currentUser = useUser()
 
-  // 加载评论列表
   const loadComments = async () => {
     try {
-      const { data } = await getComments(noteId)
-      setComments(data)
+      const response = await getComments({ noteId })
+      setComments(response.data.data as NoteComment[])
     } catch (error) {
       message.error('加载评论失败')
     }
   }
 
-  // 提交评论
   const handleSubmit = async () => {
-    if (!currentUser) {
+    if (!currentUser.userId) {
       message.warning('请先登录')
       return
     }
@@ -44,10 +42,13 @@ export function NoteComments({ noteId }: NoteCommentsProps) {
 
     setLoading(true)
     try {
-      await createComment(noteId, content.trim())
+      await createComment({
+        noteId,
+        content: content.trim(),
+      })
       message.success('评论成功')
       setContent('')
-      loadComments()
+      await loadComments()
     } catch (error) {
       message.error('评论失败')
     } finally {
@@ -55,12 +56,11 @@ export function NoteComments({ noteId }: NoteCommentsProps) {
     }
   }
 
-  // 删除评论
   const handleDelete = async (commentId: number) => {
     try {
       await deleteComment(commentId)
       message.success('删除成功')
-      loadComments()
+      await loadComments()
     } catch (error) {
       message.error('删除失败')
     }
@@ -98,20 +98,21 @@ export function NoteComments({ noteId }: NoteCommentsProps) {
         renderItem={(comment) => (
           <List.Item
             actions={[
-              comment.userId === currentUser?.userId && (
+              String(comment.userId) === String(currentUser.userId) ? (
                 <Button
+                  key={`delete-${comment.id}`}
                   type="link"
                   danger
                   onClick={() => handleDelete(comment.id)}
                 >
                   删除
                 </Button>
-              ),
+              ) : null,
             ]}
           >
             <List.Item.Meta
-              avatar={<Avatar src={currentUser?.avatarUrl} />}
-              title={currentUser?.username}
+              avatar={<Avatar>{String(comment.userId).slice(-2)}</Avatar>}
+              title={`用户 ${comment.userId}`}
               description={
                 <div>
                   <div>{comment.content}</div>

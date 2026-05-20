@@ -10,6 +10,11 @@ public class QuestionNoteVO {
     private Integer questionId;
 
     /*
+     * 问题所属分类ID
+     */
+    private Integer categoryId;
+
+    /*
      * 问题标题
      */
     private String title;
@@ -29,6 +34,11 @@ public class QuestionNoteVO {
      * 浏览量
      */
     private Integer viewCount;
+
+    /*
+     * 题目参考解析
+     */
+    private String referenceSolution;
 
     /**
      * 关于这道题用户的详细信息

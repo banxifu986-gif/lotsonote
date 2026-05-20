@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { useUser } from '../hooks/useUser.ts'
+import dayjs from 'dayjs'
+import ImgCrop from 'antd-img-crop'
+import { Upload } from 'antd'
 import {
   Avatar,
   Button,
@@ -12,17 +14,23 @@ import {
   UploadFile,
   UploadProps,
 } from 'antd'
-import { UserState } from '../types/types.ts'
+import { RcFile, UploadChangeParam } from 'antd/es/upload/interface'
+import type { UploadRequestOption as RcCustomRequestOptions } from 'rc-upload/lib/interface'
+import { userService } from '../service/userService.ts'
+import { useUser } from '../hooks/useUser.ts'
 import { useUserForm } from '../hooks/useUserForm.ts'
-import dayjs from 'dayjs'
-import { Upload } from 'antd'
-import ImgCrop from 'antd-img-crop'
-import { UploadChangeParam } from 'antd/es/upload/interface'
+import { UserState } from '../types/types.ts'
+import { resolveAvatarUrl } from '../utils/avatar.ts'
+
+type UploadAvatarResponse = {
+  code: number
+  message: string
+  data: {
+    url: string
+  }
+}
 
 const UserInfoForm: React.FC = () => {
-  /**
-   * 用户信息展示
-   */
   const user = useUser() as UserState
 
   const [form] = Form.useForm()
@@ -47,31 +55,27 @@ const UserInfoForm: React.FC = () => {
 
   const handleSave = async (values: UserState) => {
     const oldValues = user
-    // 提取差异字段
     const diff: Partial<typeof oldValues> = {}
 
-    // 这段确实需要特殊处理 birthday 字段
     Object.entries(values).forEach(([key, newValue]) => {
-      // @ts-expect-error ...
+      // @ts-expect-error existing shape is dynamic here
       const oldValue = oldValues[key]
       if (key === 'birthday') {
-        // 类型检查并格式化生日
         const newBirthday = newValue
           ? dayjs(newValue as string | Date).format('YYYY-MM-DD')
           : null
         const oldBirthday =
           dayjs(oldValues[key] as string | Date).format('YYYY-MM-DD') ?? null
         if (newBirthday !== oldBirthday) {
-          // @ts-expect-error ...
+          // @ts-expect-error existing shape is dynamic here
           diff[key] = newBirthday
         }
       } else if (newValue !== oldValue) {
-        // @ts-expect-error ...
+        // @ts-expect-error existing shape is dynamic here
         diff[key] = newValue
       }
     })
 
-    // 如果没有修改任何字段，提示用户无需更新
     if (Object.keys(diff).length === 0) {
       message.info('未更新任何字段')
       return
@@ -79,7 +83,7 @@ const UserInfoForm: React.FC = () => {
 
     try {
       await updateUserInfo(diff)
-      message.success('更新成功！')
+      message.success('更新成功')
     } catch (e: any) {
       message.error(e.message)
     } finally {
@@ -104,10 +108,35 @@ const UserInfoForm: React.FC = () => {
     imgWindow?.document.write(image.outerHTML)
   }
 
-  const uploadAvatarHandle = async (info: UploadChangeParam) => {
+  const uploadAvatarHandle = async (
+    info: UploadChangeParam<UploadFile<UploadAvatarResponse>>,
+  ) => {
     if (info.file.response?.code === 200) {
-      // 上传头像成功
       await updateUserAvatar(info.file.response.data.url)
+      message.success('头像上传成功')
+      return
+    }
+
+    if (info.file.status === 'error') {
+      const errorMessage =
+        info.file.response?.message ||
+        (info.file.error instanceof Error
+          ? info.file.error.message
+          : '头像上传失败')
+      message.error(errorMessage)
+    }
+  }
+
+  const uploadAvatarRequest = async (options: RcCustomRequestOptions) => {
+    const { file, onError, onSuccess } = options
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file as RcFile)
+      const response = await userService.uploadImageService(formData)
+      onSuccess?.(response, file)
+    } catch (e) {
+      onError?.(e as Error)
     }
   }
 
@@ -116,15 +145,17 @@ const UserInfoForm: React.FC = () => {
       <div className="mb-6 flex items-center space-x-4">
         <ImgCrop rotationSlider>
           <Upload
-            action={() => {
-              return import.meta.env.VITE_API_BASE_URL + '/api/users/avatar'
-            }}
+            customRequest={uploadAvatarRequest}
             onChange={uploadAvatarHandle}
             onPreview={onPreview}
-            accept={'image/*'}
+            accept="image/*"
             showUploadList={false}
           >
-            <Avatar src={user.avatarUrl} size={64} className="cursor-pointer" />
+            <Avatar
+              src={resolveAvatarUrl(user.avatarUrl || '')}
+              size={64}
+              className="cursor-pointer"
+            />
           </Upload>
         </ImgCrop>
         <div>

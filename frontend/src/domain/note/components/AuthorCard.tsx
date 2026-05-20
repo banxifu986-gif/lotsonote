@@ -5,6 +5,7 @@ import { USER_HOME } from '../../../apps/user/router/config.ts'
 import { Avatar } from 'antd'
 import { UserOutlined } from '@ant-design/icons'
 import { TimeAgo } from '../../../base/components'
+import { resolveAvatarUrl } from '../../user/utils/avatar.ts'
 
 interface AuthorCardProps {
   note?: NoteWithRelations
@@ -18,7 +19,7 @@ const AuthorCard: React.FC<AuthorCardProps> = ({ note }) => {
     <div className="flex gap-3">
       <Link to={`${USER_HOME}/${note?.author.userId}`}>
         <Avatar
-          src={note?.author.avatarUrl}
+          src={resolveAvatarUrl(note?.author.avatarUrl || '')}
           className={
             (note?.author.avatarUrl ? '' : 'bg-yellow-500') + ' cursor-pointer'
           }

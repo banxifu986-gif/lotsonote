@@ -1,45 +1,78 @@
+import { useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import { LoginBody } from '../types/serviceTypes.ts'
-import { login } from '../../../store/appSlice.ts'
+import {
+  loaded,
+  login,
+  logout,
+  setLoginModalOpen,
+} from '../../../store/appSlice.ts'
 import { userService } from '../service/userService.ts'
 import { message } from 'antd'
-import { setUser } from '../../../store/userSlice.ts'
+import { resetUser, setUser } from '../../../store/userSlice.ts'
 import { kamanoteUserToken } from '../../../base/constants'
+import { resolveAvatarUrl } from '../utils/avatar.ts'
 
 export function useLogin() {
   const dispatch = useDispatch()
 
-  async function handleUserAuth(token: string | undefined, data: any) {
+  const handleUserAuth = useCallback(
+    async (token: string | undefined, data: any) => {
+      if (!token) {
+        message.error('token is null')
+        throw new Error('token is null')
+      }
+      const normalizedData = {
+        ...data,
+        avatarUrl: resolveAvatarUrl(data?.avatarUrl || ''),
+      }
+      localStorage.setItem(kamanoteUserToken, token)
+      dispatch(setUser(normalizedData))
+      dispatch(login())
+      dispatch(setLoginModalOpen(false))
+    },
+    [dispatch],
+  )
+
+  const clearUserAuth = useCallback(() => {
+    localStorage.removeItem(kamanoteUserToken)
+    localStorage.removeItem('currentUser')
+    dispatch(resetUser())
+    dispatch(logout())
+  }, [dispatch])
+
+  const loginHandle = useCallback(
+    async (loginBody: LoginBody) => {
+      const resp = await userService.loginService(loginBody)
+      const { token, data } = resp
+      await handleUserAuth(token, data)
+    },
+    [handleUserAuth],
+  )
+
+  const whoAmIHandle = useCallback(async () => {
+    const token = localStorage.getItem(kamanoteUserToken)
     if (!token) {
-      message.error('token is null')
-      throw new Error('token is null')
+      clearUserAuth()
+      dispatch(loaded())
+      return
     }
-    // 将 token 存储到 localStorage
-    localStorage.setItem(kamanoteUserToken, token)
-    // 存储用户信息
-    dispatch(setUser(data))
-    // 设置登录状态
-    dispatch(login())
-  }
 
-  async function loginHandle(loginBody: LoginBody) {
-    const resp = await userService.loginService(loginBody)
-    const { token, data } = resp
-    await handleUserAuth(token, data)
-  }
-
-  async function whoAmIHandle() {
     try {
       const resp = await userService.whoamiService()
-      const { data, token } = resp
-      await handleUserAuth(token, data)
+      const { data, token: nextToken } = resp
+      await handleUserAuth(nextToken, data)
     } catch (e: unknown) {
       console.log(e)
+      clearUserAuth()
+    } finally {
+      dispatch(loaded())
     }
-  }
+  }, [clearUserAuth, dispatch, handleUserAuth])
 
   return {
     loginHandle,
     whoAmIHandle,
+    clearUserAuth,
   }
 }

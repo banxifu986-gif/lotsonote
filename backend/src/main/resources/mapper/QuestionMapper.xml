@@ -89,6 +89,9 @@
             <if test="question.title != null">
                 title = #{question.title},
             </if>
+            <if test="question.categoryId != null">
+                category_id = #{question.categoryId},
+            </if>
             <if test="question.difficulty != null">
                 difficulty = #{question.difficulty},
             </if>

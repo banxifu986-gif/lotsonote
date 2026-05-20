@@ -67,6 +67,33 @@ public class LocalFileServiceImplTest {
     }
 
     @Test
+    void uploadImageShouldCreateFileWhenUploadPathIsRelative() {
+        LocalFileServiceImpl fileService = new LocalFileServiceImpl();
+        String currentDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", tempDir.toString());
+        ReflectionTestUtils.setField(fileService, "uploadBasePath", "./relative-uploads");
+        ReflectionTestUtils.setField(fileService, "urlPrefix", "/images");
+
+        try {
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "demo.png",
+                    "image/png",
+                    new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00}
+            );
+
+            String url = fileService.uploadImage(file);
+
+            assertNotNull(url);
+            assertTrue(url.startsWith("/images/"));
+            assertTrue(Files.exists(tempDir.resolve("relative-uploads")));
+            assertEquals(1, tempDir.resolve("relative-uploads").toFile().listFiles().length);
+        } finally {
+            System.setProperty("user.dir", currentDir);
+        }
+    }
+
+    @Test
     void uploadImageShouldRejectUnsupportedExtension() {
         LocalFileServiceImpl fileService = createFileService();
         MockMultipartFile file = new MockMultipartFile(

@@ -38,6 +38,8 @@ public interface QuestionService {
      */
     ApiResponse<List<QuestionVO>> getQuestions(QuestionQueryParam queryParams);
 
+    ApiResponse<QuestionVO> getQuestion(Integer questionId);
+
     /**
      * 创建问题接口
      * 该方法用于提交一个新的问题，以便在系统中创建问题记录

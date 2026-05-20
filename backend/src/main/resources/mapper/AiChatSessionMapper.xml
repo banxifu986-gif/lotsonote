@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.banny.lotsonote.mapper.AiChatSessionMapper">
+
+    <resultMap id="BaseResultMap" type="com.banny.lotsonote.model.entity.AiChatSession">
+        <id column="session_id" property="sessionId"/>
+        <result column="user_id" property="userId"/>
+        <result column="scene_type" property="sceneType"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="title" property="title"/>
+        <result column="context_snapshot" property="contextSnapshot"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT *
+        FROM ai_chat_session
+        WHERE user_id = #{userId}
+        ORDER BY updated_at DESC, session_id DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT *
+        FROM ai_chat_session
+        WHERE session_id = #{sessionId}
+    </select>
+
+    <select id="findLatestByUserIdAndBiz" resultMap="BaseResultMap">
+        SELECT *
+        FROM ai_chat_session
+        WHERE user_id = #{userId}
+          AND scene_type = #{sceneType}
+          AND biz_type = #{bizType}
+          AND biz_id = #{bizId}
+        ORDER BY updated_at DESC, session_id DESC
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="sessionId">
+        INSERT INTO ai_chat_session (user_id, scene_type, biz_type, biz_id, title, context_snapshot)
+        VALUES (#{userId}, #{sceneType}, #{bizType}, #{bizId}, #{title}, #{contextSnapshot})
+    </insert>
+
+    <update id="updateTitleAndTouch">
+        UPDATE ai_chat_session
+        SET title = #{title},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = #{sessionId}
+    </update>
+
+    <update id="updateContextAndTouch">
+        UPDATE ai_chat_session
+        SET title = #{title},
+            context_snapshot = #{contextSnapshot},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = #{sessionId}
+    </update>
+
+    <update id="touch">
+        UPDATE ai_chat_session
+        SET updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = #{sessionId}
+    </update>
+</mapper>

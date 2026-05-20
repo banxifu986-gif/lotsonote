@@ -76,6 +76,12 @@ public class QuestionController {
         return questionService.getQuestions(queryParams);
     }
 
+    @GetMapping("/admin/questions/{questionId}")
+    public ApiResponse<QuestionVO> getQuestion(@Min(value = 1, message = "questionId 必须为正整数")
+                                               @PathVariable Integer questionId) {
+        return questionService.getQuestion(questionId);
+    }
+
     /**
      * 管理端创建新问题
      *

@@ -3,6 +3,7 @@ import { UserVO } from '../types/types.ts'
 import { Panel } from '../../../base/components'
 import { Avatar } from 'antd'
 import { UserOutlined } from '@ant-design/icons'
+import { resolveAvatarUrl } from '../utils/avatar.ts'
 
 interface UserHomeProfileProps {
   user?: UserVO
@@ -15,7 +16,7 @@ const UserHomeProfile: React.FC<UserHomeProfileProps> = ({ user }) => {
         <div className="w-28">
           <Avatar
             size={80}
-            src={user?.avatarUrl}
+            src={resolveAvatarUrl(user?.avatarUrl || '')}
             className={`cursor-pointer ${!user?.avatarUrl ? 'bg-orange-300' : ''}`}
           >
             <UserOutlined />

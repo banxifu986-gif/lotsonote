@@ -1,6 +1,7 @@
 import type { UserEntity, UserState } from './types/types.ts'
 import { Gender, Admin, UserVO } from './types/types.ts'
 import LoginModal from './components/LoginModal.tsx'
+import AuthGuard from './components/AuthGuard.tsx'
 import UserAvatarMenu from './components/UserAvatarMenu.tsx'
 import UserInfoForm from './components/UserInfoForm.tsx'
 import { userService } from './service/userService.ts'
@@ -11,7 +12,7 @@ import { useUser2 } from './hooks/useUser2.ts'
 
 export type { UserEntity, UserState, UserVO }
 export { Gender, Admin }
-export { LoginModal, UserAvatarMenu, UserInfoForm, UserHomeProfile }
+export { AuthGuard, LoginModal, UserAvatarMenu, UserInfoForm, UserHomeProfile }
 export { userService, useLogin }
 export { UserList }
 export { useUser2 }

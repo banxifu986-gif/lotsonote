@@ -30,6 +30,15 @@ export const adminQuestionService = {
     )
   },
 
+  getQuestionByIdService: (questionId: number) => {
+    return httpClient.request<QuestionEntity>(
+      adminQuestionApiList.getQuestionById,
+      {
+        pathParams: [questionId],
+      },
+    )
+  },
+
   /**
    * 创建题目服务
    */

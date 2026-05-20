@@ -3,6 +3,7 @@ import { Button, Input, message, Avatar } from 'antd'
 import { SendOutlined } from '@ant-design/icons'
 import { useUser } from '@/domain/user/hooks/useUser.ts'
 import { Comment } from '@/domain/comment/types.ts'
+import { resolveAvatarUrl } from '@/domain/user/utils/avatar.ts'
 
 interface CommentInputProps {
   noteId: number
@@ -67,7 +68,10 @@ export const CommentInput: React.FC<CommentInputProps> = ({
         <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
           <div className="flex items-center gap-2 text-sm text-blue-700">
             <span>回复</span>
-            <Avatar size="small" src={replyTo.author?.avatarUrl} />
+            <Avatar
+              size="small"
+              src={resolveAvatarUrl(replyTo.author?.avatarUrl || '')}
+            />
             <span className="font-medium">@{replyTo.author?.username}</span>
           </div>
           <Button
@@ -83,7 +87,10 @@ export const CommentInput: React.FC<CommentInputProps> = ({
 
       {/* 输入区域 */}
       <div className="flex gap-3">
-        <Avatar src={user.avatarUrl} className="flex-shrink-0" />
+        <Avatar
+          src={resolveAvatarUrl(user.avatarUrl || '')}
+          className="flex-shrink-0"
+        />
         <div className="flex-1 space-y-3">
           <Input.TextArea
             value={content}

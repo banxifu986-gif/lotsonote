@@ -32,6 +32,10 @@ const QuestionAddDrawer: React.FC<QuestionAddDrawerProps> = ({
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (!isDrawerOpen) {
+      return
+    }
+
     if (mode === 'update') {
       form.setFieldsValue({
         questionId: selectedQuestion?.questionId,
@@ -39,41 +43,42 @@ const QuestionAddDrawer: React.FC<QuestionAddDrawerProps> = ({
         difficulty: selectedQuestion?.difficulty,
         examPoint: selectedQuestion?.examPoint,
         categoryId: selectedQuestion?.categoryId,
+        referenceSolution: selectedQuestion?.referenceSolution,
       })
     } else if (mode === 'create') {
-      // TODO
-      console.log('create')
+      form.resetFields()
     } else {
-      console.log('error')
       throw new Error('mode is not valid')
     }
-    return () => {
-      form.resetFields()
-    }
-  })
+  }, [form, isDrawerOpen, mode, selectedQuestion])
 
   async function onFinish(values: any) {
     setLoading(true)
-    if (mode === 'create') {
-      createQuestion(values as CreateQuestionBody)
-      message.success('创建成功')
-      toggleIsDrawerOpen()
-    } else if (mode === 'update') {
-      if (selectedQuestion === undefined) {
-        throw new Error('selectedQuestion is undefined')
+    try {
+      if (mode === 'create') {
+        await createQuestion(values as CreateQuestionBody)
+        message.success('创建成功')
+        toggleIsDrawerOpen()
+      } else if (mode === 'update') {
+        if (selectedQuestion === undefined) {
+          throw new Error('selectedQuestion is undefined')
+        }
+        const diffResult = diffObject(
+          selectedQuestion,
+          values,
+        ) as UpdateQuestionBody
+        await updateQuestion({
+          ...diffResult,
+          questionId: selectedQuestion.questionId,
+        })
+        message.success('更新成功')
+        toggleIsDrawerOpen()
       }
-      const diffResult = diffObject(
-        selectedQuestion,
-        values,
-      ) as UpdateQuestionBody
-      updateQuestion({
-        ...diffResult,
-        questionId: selectedQuestion.questionId,
-      })
-      message.success('更新成功')
-      toggleIsDrawerOpen()
+    } catch (error: any) {
+      message.error(error.message ?? '保存失败')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -129,6 +134,13 @@ const QuestionAddDrawer: React.FC<QuestionAddDrawerProps> = ({
             style={{ width: '100%' }}
             treeData={treeData}
           ></TreeSelect>
+        </Form.Item>
+        <Form.Item
+          label={'参考解析'}
+          name={'referenceSolution'}
+          extra={'支持 Markdown，供题目页和 AI 讲解使用'}
+        >
+          <Input.TextArea rows={10} />
         </Form.Item>
         <Form.Item>
           <Button block htmlType="submit" type="primary" loading={loading}>
