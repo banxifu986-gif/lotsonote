@@ -1,13 +1,9 @@
 package com.banny.lotsonote.model.base;
 
+import com.banny.lotsonote.utils.LogSanitizer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * API响应类
- *
- * @param <T> 响应数据类型
- */
 @Data
 @NoArgsConstructor
 public class ApiResponse<T> {
@@ -37,6 +33,14 @@ public class ApiResponse<T> {
         this.code = code;
         this.message = message;
         this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiResponse(code=" + code
+                + ", message=" + message
+                + ", data=" + LogSanitizer.sanitize(data)
+                + ")";
     }
 
     /**

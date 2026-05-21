@@ -1,5 +1,6 @@
 package com.banny.lotsonote.model.vo.user;
 
+import com.banny.lotsonote.utils.LogSanitizer;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -59,4 +60,9 @@ public class LoginUserVO {
      * 是否管理员
      */
     private Integer isAdmin;
+
+    @Override
+    public String toString() {
+        return LogSanitizer.sanitize(this);
+    }
 }

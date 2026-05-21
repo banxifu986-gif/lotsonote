@@ -4,7 +4,9 @@ import com.banny.lotsonote.config.RabbitMQConfig;
 import com.banny.lotsonote.model.enums.redisKey.RedisKey;
 import com.banny.lotsonote.task.email.EmailTask;
 import com.rabbitmq.client.Channel;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import jakarta.mail.internet.MimeMessage;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -32,6 +33,9 @@ public class EmailConsumer {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @Value("${spring.mail.username}")
     private String fromEmail;
 
@@ -43,16 +47,45 @@ public class EmailConsumer {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
 
         try {
-            log.info("开始处理邮件任务: {}", emailTask.getEmail());
+            if (isTaskDone(emailTask.getTaskId())) {
+                log.info("邮件任务已处理过，直接确认, taskId={}", emailTask.getTaskId());
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+
+            if (isExpired(emailTask)) {
+                log.warn("邮件任务已过期，转入死信队列, taskId={}", emailTask.getTaskId());
+                deadLetter(emailTask, "TASK_EXPIRED");
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+
             sendEmail(emailTask);
+            markTaskDone(emailTask.getTaskId());
             channel.basicAck(deliveryTag, false);
-            log.info("邮件发送成功: {}", emailTask.getEmail());
+            log.info("邮件发送成功, taskId={}, email={}", emailTask.getTaskId(), emailTask.getEmail());
         } catch (Exception e) {
-            log.error("邮件发送失败: {}", emailTask.getEmail(), e);
+            log.error("邮件发送失败, taskId={}, email={}", emailTask.getTaskId(), emailTask.getEmail(), e);
             try {
-                channel.basicNack(deliveryTag, false, true);
-            } catch (Exception ex) {
-                log.error("消息确认失败", ex);
+                if (shouldRetry(emailTask)) {
+                    EmailTask retryTask = buildRetryTask(emailTask, e.getMessage());
+                    rabbitTemplate.convertAndSend(
+                            RabbitMQConfig.EMAIL_RETRY_EXCHANGE,
+                            RabbitMQConfig.EMAIL_RETRY_ROUTING_KEY,
+                            retryTask
+                    );
+                    log.warn("邮件任务已转入重试队列, taskId={}, retryCount={}", retryTask.getTaskId(), retryTask.getRetryCount());
+                } else {
+                    deadLetter(emailTask, e.getMessage());
+                }
+                channel.basicAck(deliveryTag, false);
+            } catch (Exception ackException) {
+                log.error("邮件失败消息处理异常, taskId={}", emailTask.getTaskId(), ackException);
+                try {
+                    channel.basicNack(deliveryTag, false, false);
+                } catch (Exception nackException) {
+                    log.error("邮件失败消息拒绝异常, taskId={}", emailTask.getTaskId(), nackException);
+                }
             }
         }
     }
@@ -74,6 +107,53 @@ public class EmailConsumer {
         mailSender.send(mimeMessage);
 
         String redisKey = RedisKey.verificationCode(emailTask.getType(), emailTask.getEmail());
-        redisTemplate.opsForValue().set(redisKey, emailTask.getCode(), expireMinutes, TimeUnit.MINUTES);
+        long ttlMillis = Math.max(emailTask.getExpireAt() - System.currentTimeMillis(), 1L);
+        redisTemplate.opsForValue().set(redisKey, emailTask.getCode(), ttlMillis, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean isTaskDone(String taskId) {
+        return redisTemplate.opsForValue().get(RedisKey.emailTaskDone(taskId)) != null;
+    }
+
+    private void markTaskDone(String taskId) {
+        redisTemplate.opsForValue().set(
+                RedisKey.emailTaskDone(taskId),
+                "1",
+                TimeUnit.MINUTES.toMillis(expireMinutes),
+                TimeUnit.MILLISECONDS
+        );
+    }
+
+    private boolean isExpired(EmailTask emailTask) {
+        return System.currentTimeMillis() >= emailTask.getExpireAt();
+    }
+
+    private boolean shouldRetry(EmailTask emailTask) {
+        return !isExpired(emailTask) && emailTask.getRetryCount() < RabbitMQConfig.EMAIL_MAX_RETRY_COUNT;
+    }
+
+    private EmailTask buildRetryTask(EmailTask emailTask, String failureReason) {
+        EmailTask retryTask = new EmailTask();
+        retryTask.setTaskId(emailTask.getTaskId());
+        retryTask.setEmail(emailTask.getEmail());
+        retryTask.setCode(emailTask.getCode());
+        retryTask.setType(emailTask.getType());
+        retryTask.setRetryCount(emailTask.getRetryCount() + 1);
+        retryTask.setCreatedAt(emailTask.getCreatedAt());
+        retryTask.setExpireAt(emailTask.getExpireAt());
+        retryTask.setTraceId(emailTask.getTraceId());
+        retryTask.setRequestIp(emailTask.getRequestIp());
+        retryTask.setFailureReason(failureReason);
+        return retryTask;
+    }
+
+    private void deadLetter(EmailTask emailTask, String failureReason) {
+        emailTask.setFailureReason(failureReason);
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EMAIL_DLX,
+                RabbitMQConfig.EMAIL_DEAD_ROUTING_KEY,
+                emailTask
+        );
+        log.error("邮件任务进入死信队列, taskId={}, email={}, reason={}", emailTask.getTaskId(), emailTask.getEmail(), failureReason);
     }
 }

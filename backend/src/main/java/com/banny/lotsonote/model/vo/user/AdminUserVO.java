@@ -1,5 +1,6 @@
 package com.banny.lotsonote.model.vo.user;
 
+import com.banny.lotsonote.utils.LogSanitizer;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -34,4 +35,9 @@ public class AdminUserVO {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @Override
+    public String toString() {
+        return LogSanitizer.sanitize(this);
+    }
 }

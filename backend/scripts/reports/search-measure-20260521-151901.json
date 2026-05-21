@@ -1,0 +1,54 @@
+﻿[
+    {
+        "Scenario":  "note-cold",
+        "Url":  "http://localhost:8081/api/search/notes?keyword=Java%20%E9%9D%A2%E8%AF%95\u0026page=1\u0026pageSize=10",
+        "TotalRequests":  1,
+        "CacheHits":  0,
+        "CacheMisses":  1,
+        "HitRate":  0,
+        "AvgDurationMs":  18,
+        "P95DurationMs":  18,
+        "AvgEndToEndMs":  82,
+        "P95EndToEndMs":  82,
+        "ResultCount":  0
+    },
+    {
+        "Scenario":  "note-hot-repeat",
+        "Url":  "http://localhost:8081/api/search/notes?keyword=Java%20%E9%9D%A2%E8%AF%95\u0026page=1\u0026pageSize=10",
+        "TotalRequests":  20,
+        "CacheHits":  20,
+        "CacheMisses":  0,
+        "HitRate":  100,
+        "AvgDurationMs":  3.1,
+        "P95DurationMs":  3,
+        "AvgEndToEndMs":  28.7,
+        "P95EndToEndMs":  31,
+        "ResultCount":  0
+    },
+    {
+        "Scenario":  "user-cold",
+        "Url":  "http://localhost:8081/api/search/users?keyword=admin\u0026page=1\u0026pageSize=10",
+        "TotalRequests":  1,
+        "CacheHits":  0,
+        "CacheMisses":  1,
+        "HitRate":  0,
+        "AvgDurationMs":  15,
+        "P95DurationMs":  15,
+        "AvgEndToEndMs":  39,
+        "P95EndToEndMs":  39,
+        "ResultCount":  0
+    },
+    {
+        "Scenario":  "user-hot-repeat",
+        "Url":  "http://localhost:8081/api/search/users?keyword=admin\u0026page=1\u0026pageSize=10",
+        "TotalRequests":  20,
+        "CacheHits":  20,
+        "CacheMisses":  0,
+        "HitRate":  100,
+        "AvgDurationMs":  2.25,
+        "P95DurationMs":  3,
+        "AvgEndToEndMs":  25.9,
+        "P95EndToEndMs":  29,
+        "ResultCount":  0
+    }
+]

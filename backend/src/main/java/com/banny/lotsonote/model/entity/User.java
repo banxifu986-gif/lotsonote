@@ -1,19 +1,12 @@
 package com.banny.lotsonote.model.entity;
 
+import com.banny.lotsonote.utils.LogSanitizer;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * @ClassName User
- * @Description 用户实体类
- * @Author Tong
- * @LastChangeDate 2024-12-16 10:27
- * @Version v1.0
- */
 @Data
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -98,4 +91,9 @@ public class User {
      * 更新时间
      */
     private LocalDateTime updatedAt;
+
+    @Override
+    public String toString() {
+        return LogSanitizer.sanitize(this);
+    }
 }
