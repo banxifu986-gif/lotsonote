@@ -19,6 +19,7 @@ import com.banny.lotsonote.service.*;
 import com.banny.lotsonote.utils.ApiResponseUtil;
 import com.banny.lotsonote.utils.MarkdownUtil;
 import com.banny.lotsonote.utils.PaginationUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -35,6 +38,10 @@ import java.util.stream.Collectors;
 @Log4j2
 @Service
 public class NoteServiceImpl implements NoteService {
+
+    private static final String RANK_CACHE_HEADER = "X-Rank-Cache";
+    private static final String RANK_DURATION_HEADER = "X-Rank-Duration-Ms";
+    private static final String RANK_RESULT_COUNT_HEADER = "X-Rank-Result-Count";
 
     @Autowired
     private NoteMapper noteMapper;

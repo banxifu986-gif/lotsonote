@@ -80,3 +80,9 @@ npm run dev
 ```
 
 前端模块标识已统一为 `lotso-note-frontend`，后端构建标识已统一为 `lotso-note-backend`。
+
+## 开源协议
+
+本项目基于 [kamanotes](https://github.com/youngyangyang04/kamanotes) 二次开发学习，沿用原项目 [MIT License](./LICENSE)。
+
+Copyright (c) 2025 程序员Carl

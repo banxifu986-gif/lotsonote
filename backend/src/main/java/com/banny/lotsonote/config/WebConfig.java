@@ -1,5 +1,6 @@
 package com.banny.lotsonote.config;
 
+import com.banny.lotsonote.filter.NoteRankMetricsFilter;
 import com.banny.lotsonote.filter.TraceIdFilter;
 import com.banny.lotsonote.interceptor.TokenInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 // import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -20,6 +22,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
     private TokenInterceptor tokenInterceptor;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     // 静态资源映射
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -55,6 +60,15 @@ public class WebConfig implements WebMvcConfigurer {
         FilterRegistrationBean<TraceIdFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new TraceIdFilter());
         registrationBean.addUrlPatterns("/*");
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<NoteRankMetricsFilter> noteRankMetricsFilter() {
+        FilterRegistrationBean<NoteRankMetricsFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new NoteRankMetricsFilter(redisTemplate));
+        registrationBean.addUrlPatterns("/api/notes/ranklist");
+        registrationBean.setOrder(2);
         return registrationBean;
     }
 }
